@@ -5,11 +5,9 @@ public class TestAvlTree {
         MyAVLTree<String> tree = new MyAVLTree<>();
         tree.insert("hello");
         tree.insert("hi");
-        tree.insert("di");
         tree.insert("hehe");
         tree.delete("hehe");
-        tree.delete("hi");
-        System.out.println(tree.search("hi"));
+        tree.printAll();
     }
 
 }
@@ -17,6 +15,17 @@ public class TestAvlTree {
 class MyAVLTree <T extends Comparable<T>> {
     private MyAVLTreeNode<T> root;
 
+    public void printAll(){
+        printAll(root);
+    }
+
+    public void printAll(MyAVLTreeNode<T> root) {
+        if(root!=null) {
+            printAll(root.getLeftChild());
+            System.out.println(root.getItem());
+            printAll(root.getRightChild());
+        }
+    }
 
     public T search(T item) {
         return search(root,item);
