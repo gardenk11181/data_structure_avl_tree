@@ -7,7 +7,9 @@ public class TestAvlTree {
         tree.insert("hi");
         tree.insert("di");
         tree.insert("hehe");
-        System.out.println(tree.search("hehe"));
+        tree.delete("hehe");
+        tree.delete("hi");
+        System.out.println(tree.search("hi"));
     }
 
 }
@@ -30,6 +32,87 @@ class MyAVLTree <T extends Comparable<T>> {
         } else {
             return root.getItem();
         }
+    }
+
+    public void delete(T item) {
+        delete(root, item);
+    }
+
+    public void delete(MyAVLTreeNode<T> root, T item) {
+        if(root==null) {
+        } else if(item.compareTo(root.getItem())<0) {
+            delete(root.getLeftChild(),item);
+        } else if(item.compareTo(root.getItem())>0) {
+            delete(root.getRightChild(),item);
+        } else {
+            if(root.getLeftChild()==null) {
+                if(root.getRightChild()==null) {
+                    //leaf node
+                    if(root.getIsLeftChild()) {
+                        root.getParent().setLeftChild(null);
+                        root.setParent(null);
+                    } else {
+                        if(root.getParent()==null) {
+                            root = null;
+                        } else {
+                            root.getParent().setRightChild(null);
+                            root.setParent(null);
+                        }
+                    }
+                } else {
+                    if(root.getIsLeftChild()) {
+                        root.getParent().setLeftChild(root.getRightChild());
+                        root.getRightChild().setParent(root.getParent());
+                        root.setParent(null);
+                        root.setRightChild(null);
+
+                    } else {
+                        if(root.getParent()==null) {
+                            root = root.getRightChild();
+                            root.setParent(null);
+                        } else {
+                            root.getParent().setRightChild(root.getRightChild());
+                            root.getRightChild().setParent(root.getParent());
+                            root.setParent(null);
+                            root.setRightChild(null);
+                        }
+                    }
+                }
+            } else {
+                if(root.getRightChild()==null) {
+                    if(root.getIsLeftChild()) {
+                        root.getParent().setLeftChild(root.getLeftChild());
+                        root.getLeftChild().setParent(root.getParent());
+                        root.setParent(null);
+                        root.setLeftChild(null);
+                    } else {
+                        if(root.getParent()==null) {
+                            root = root.getLeftChild();
+                            root.setParent(null);
+                        } else {
+                            root.getParent().setRightChild(root.getLeftChild());
+                            root.getLeftChild().setParent(root.getParent());
+                            root.setParent(null);
+                            root.setLeftChild(null);
+                        }
+                    }
+                } else {
+                    MyAVLTreeNode<T> tmp = getSmallest(root.getRightChild());
+                    T tmpKey = tmp.getItem();
+                    root.setItem(tmpKey);
+                    tmp.getParent().setLeftChild(null);
+                    tmp.setParent(null);
+                }
+            }
+        }
+    }
+
+    public MyAVLTreeNode<T> getSmallest(MyAVLTreeNode<T> root) {
+        MyAVLTreeNode<T> node = root;
+        while(node.getLeftChild()!=null) {
+            node = node.getLeftChild();
+        }
+        return node;
     }
 
     public void insert(T item) {
