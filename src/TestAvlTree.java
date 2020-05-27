@@ -6,7 +6,6 @@ public class TestAvlTree {
         tree.insert("hello");
         tree.insert("hi");
         tree.insert("hehe");
-        tree.delete("hehe");
         tree.printAll();
     }
 
