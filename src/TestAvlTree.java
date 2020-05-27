@@ -3,10 +3,13 @@ import com.sun.source.tree.Tree;
 public class TestAvlTree {
     public static void main(String[] args) {
         MyAVLTree<String> tree = new MyAVLTree<>();
-        tree.insert("hello");
-        tree.insert("hi");
-        tree.insert("hehe");
+        long startTime = System.nanoTime();
+        for(int i=0; i<500; i++) {
+            tree.insert(""+(int)(Math.random()*500));
+        }
         tree.printAll();
+        long finishTime = System.nanoTime();
+        System.out.println((finishTime-startTime)/1000000000.0);
     }
 
 }
@@ -138,11 +141,12 @@ class MyAVLTree <T extends Comparable<T>> {
                 MyAVLTreeNode<T> node = new MyAVLTreeNode<>();
                 node.setItem(item);
                 root.setLeftChild(node);
+                root.setLeftHeight(1);
                 node.setParent(root);
                 node.setIsLeftChild(true);
-//                root.setLeftHeight(1);
                 rebalance(root);
             } else {
+                root.setLeftHeight(root.getLeftHeight()+1);
                 insert(root.getLeftChild(),item);
             }
         } else if(item.compareTo(root.getItem())>0) {
@@ -150,44 +154,62 @@ class MyAVLTree <T extends Comparable<T>> {
                 MyAVLTreeNode<T> node = new MyAVLTreeNode<>();
                 node.setItem(item);
                 root.setRightChild(node);
+                root.setRightHeight(1);
                 node.setParent(root);
                 node.setIsLeftChild(false);
-//                root.setRightHeight(1);
                 rebalance(root);
             } else {
+                root.setRightHeight(root.getRightHeight()+1);
                 insert(root.getRightChild(),item);
+            }
+        } else {
+            while(root.getParent()!=null) {
+                if(root.getIsLeftChild()) {
+                    root.getParent().setLeftHeight(root.getParent().getLeftHeight()-1);
+                } else {
+                    root.getParent().setRightHeight(root.getParent().getRightHeight()-1);
+                }
+                root = root.getParent();
             }
         }
     }
 
     public void rebalance(MyAVLTreeNode<T> root) {
+        boolean needRecall = false;
         if(getDiff(root)>1) {
             if(getDiff(root.getLeftChild())>=0) {
+                if(getDiff(root.getLeftChild())==0) needRecall = true;
                 LLRotation(root);
             } else {
                 LRRotation(root);
             }
+            root = root.getParent();
         } else if(getDiff(root)<-1){
             if(getDiff(root.getRightChild())<=0) {
+                if(getDiff(root.getRightChild())==0) needRecall = true;
                 RRRotation(root);
             } else {
                 RLRotation(root);
             }
+            root = root.getParent();
         }
 
-        if(root.getParent()!=null) rebalance(root.getParent());
+        if(root.getParent()!=null && needRecall) rebalance(root.getParent());
+        else if(root.getParent()!=null && !needRecall) {
+            while(root.getParent()!=null) {
+                if(root.getIsLeftChild()) {
+                    root.getParent().setLeftHeight(root.getParent().getLeftHeight()-1);
+                } else {
+                    root.getParent().setRightHeight(root.getParent().getRightHeight()-1);
+                }
+                root = root.getParent();
+            }
+        }
     }
 
     public int getDiff(MyAVLTreeNode<T> root) {
         if(root==null) return 0;
-        return getHeight(root.getLeftChild())-getHeight(root.getRightChild());
-    }
-
-    public int getHeight(MyAVLTreeNode<T> root) {
-        if(root==null) return 0;
-        int left = getHeight(root.getLeftChild());
-        int right = getHeight(root.getRightChild());
-        return (Math.max(left,right)+1);
+        return root.getLeftHeight()-root.getRightHeight();
     }
 
     public void LLRotation(MyAVLTreeNode<T> root) {
@@ -198,21 +220,29 @@ class MyAVLTree <T extends Comparable<T>> {
         // root 와 leftChild disconnect
         leftChild.setParent(null);
         root.setLeftChild(null);
+        root.setLeftHeight(0);
+        root.setIsLeftChild(false);
         if(leftChild.getRightHeight()!=0) {
             //root 와 leftChild의 rightChild connect
             root.setLeftChild(leftChild.getRightChild());
+            root.setLeftHeight(leftChild.getRightHeight());
             leftChild.getRightChild().setParent(root);
         }
         leftChild.setRightChild(root);
         root.setParent(leftChild);
+        leftChild.setRightHeight(1+Math.max(root.getRightHeight(),root.getLeftHeight()));
         if(rootIsLeft) {
             grandParent.setLeftChild(leftChild);
+            grandParent.setLeftHeight(1+Math.max(leftChild.getLeftHeight(),leftChild.getRightHeight()));
             leftChild.setParent(grandParent);
+            leftChild.setIsLeftChild(true);
         } else {
             if(grandParent!=null) {
                 grandParent.setRightChild(leftChild);
+                grandParent.setRightHeight(1+Math.max(leftChild.getLeftHeight(),leftChild.getRightHeight()));
                 leftChild.setParent(grandParent);
             }
+            leftChild.setIsLeftChild(false);
         }
     }
 
@@ -225,21 +255,29 @@ class MyAVLTree <T extends Comparable<T>> {
         // root 와 rightChild disconnect
         rightChild.setParent(null);
         root.setRightChild(null);
+        root.setRightHeight(0);
+        root.setIsLeftChild(true);
         if(rightChild.getLeftHeight()!=0) {
             //root 와 rightChild의 leftChild connect
             root.setRightChild(rightChild.getLeftChild());
+            root.setRightHeight(rightChild.getLeftHeight());
             rightChild.getLeftChild().setParent(root);
         }
         rightChild.setLeftChild(root);
         root.setParent(rightChild);
+        rightChild.setLeftHeight(1+Math.max(root.getRightHeight(),root.getLeftHeight()));
         if(rootIsLeft) {
             grandParent.setLeftChild(rightChild);
+            grandParent.setLeftHeight(1+Math.max(rightChild.getLeftHeight(),rightChild.getRightHeight()));
             rightChild.setParent(grandParent);
+            rightChild.setIsLeftChild(true);
         } else {
             if(grandParent!=null) {
                 grandParent.setRightChild(rightChild);
+                grandParent.setRightHeight(1+Math.max(rightChild.getLeftHeight(),rightChild.getRightHeight()));
                 rightChild.setParent(grandParent);
             }
+            rightChild.setIsLeftChild(false);
         }
     }
 
